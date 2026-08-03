@@ -31,8 +31,14 @@ Daarna twee config-bestanden invullen:
 MIJNHOST_API_KEY=jouw-mijnhost-api-key     # https://mijn.host/api/doc
 LEGO_EMAIL=jij@voorbeeld.nl                # contact voor Let's Encrypt
 STALWART_URL=http://localhost:8080         # Stalwart admin endpoint
-STALWART_USER=admin
-STALWART_PASSWORD=jouw-admin-wachtwoord
+
+# Aanbevolen: API-key (Bearer token) — maak er een aan in de Stalwart WebUI
+STALWART_TOKEN=jouw-stalwart-api-key
+
+# Alternatief: basic auth met een beheeraccount
+#STALWART_USER=admin@voorbeeld.nl
+#STALWART_PASSWORD=jouw-admin-wachtwoord
+
 # Optioneel (test eerst met staging!):
 #LEGO_SERVER=https://acme-staging-v02.api.letsencrypt.org/directory
 ```
