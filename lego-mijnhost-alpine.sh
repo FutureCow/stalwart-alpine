@@ -135,6 +135,11 @@ STALWART_URL=http://localhost:8080
 STALWART_USER=admin
 STALWART_PASSWORD=
 
+# DNS-resolvers voor lego's propagatie-check (DNS-01).
+# Standaard gebruikt lego de resolvers uit /etc/resolv.conf; als dat een
+# lokale DNS is (router, Pi-hole) die NXDOMAIN cached, gebruik dan publieke:
+#DNS_RESOLVERS=1.1.1.1:53,8.8.8.8:53
+
 # Optioneel: ACME-server (test: https://acme-staging-v02.api.letsencrypt.org/directory)
 #LEGO_SERVER=https://acme-v02.api.letsencrypt.org/directory
 EOF
@@ -166,6 +171,8 @@ load_env() {
 build_lego_args() {
     LEGO_ARGS="run --dns mijnhost --path ${LEGO_DIR} --email ${LEGO_EMAIL}"
     [ -n "${LEGO_SERVER:-}" ] && LEGO_ARGS="${LEGO_ARGS} --server ${LEGO_SERVER}"
+    # Publieke resolvers voor de propagatie-check (omzeilt lokale DNS/NXDOMAIN-cache)
+    [ -n "${DNS_RESOLVERS:-}" ] && LEGO_ARGS="${LEGO_ARGS} --dns.resolvers ${DNS_RESOLVERS}"
     while IFS= read -r domain; do
         [ -z "$domain" ] && continue
         case "$domain" in \#*) continue ;; esac
