@@ -181,6 +181,10 @@ build_lego_args() {
 }
 
 reload_stalwart() {
+    if [ -z "${STALWART_URL:-}" ]; then
+        msg_warn "STALWART_URL niet gezet - reload overgeslagen (zet http://localhost:8080 in ${ENV_FILE})"
+        return
+    fi
     msg_info "Stalwart TLS-certificaten herladen"
     if [ -n "${STALWART_TOKEN:-}" ]; then
         # Aanbevolen: API-key (Bearer token)
