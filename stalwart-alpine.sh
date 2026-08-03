@@ -12,9 +12,13 @@
 # Source: https://github.com/stalwartlabs/stalwart
 #
 # Usage:
-#   ./stalwart-alpine.sh            # install (or reinstall)
-#   ./stalwart-alpine.sh update     # update Stalwart to the latest release
+#   ./stalwart-alpine.sh            # auto: installeert of updatet (afhankelijk van wat er is)
+#   ./stalwart-alpine.sh install    # forceer (her)installatie
+#   ./stalwart-alpine.sh update     # forceer update naar de nieuwste release
 #
+# Zonder argument detecteert het script zelf wat nodig is:
+#   - geen installatie aanwezig  -> volledige installatie
+#   - installatie aanwezig       -> update als er een nieuwere release is
 # The musl build is used (statically linked) so no gcompat is required.
 
 set -e
@@ -226,9 +230,47 @@ main() {
     detect_arch
 
     case "$1" in
+        install) install ;;
         update) do_update ;;
-        *) install ;;
+        *) auto_detect ;;
     esac
+}
+
+# Auto-detect: installeer als er niets staat, update als er een nieuwere release is
+auto_detect() {
+    if [ ! -x "${STALWART_DIR}/stalwart" ]; then
+        msg_info "No Stalwart installation found — installing"
+        install
+        return
+    fi
+
+    local installed latest
+    installed="$("${STALWART_DIR}/stalwart" --version 2>/dev/null | head -n1 | awk '{print $NF}')"
+    latest="$(get_latest_version || true)"
+
+    if [ -z "$latest" ]; then
+        msg_warn "Could not check for updates (GitHub API unreachable) — skipping"
+        msg_ok "Installed version: ${installed}"
+        return
+    fi
+
+    if [ "$installed" = "$latest" ]; then
+        msg_ok "Stalwart is already up to date (v${installed})"
+    else
+        msg_info "Update available: v${installed} -> v${latest}"
+        do_update
+    fi
+}
+
+get_latest_version() {
+    local tag
+    tag="$(curl -fsSL "https://api.github.com/repos/${STALWART_REPO}/releases/latest" \
+        | grep -o '"tag_name":[^,]*' | head -n1 | cut -d'"' -f4)"
+    if [ -n "$tag" ]; then
+        echo "${tag#v}"
+        return 0
+    fi
+    return 1
 }
 
 install() {
