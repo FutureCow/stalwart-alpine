@@ -128,8 +128,10 @@ MIJNHOST_API_KEY=
 # Contact-e-mail voor Let's Encrypt (verplicht)
 LEGO_EMAIL=
 
-# Stalwart CLI verbinding (voor reload na renewal)
+# Stalwart CLI verbinding (voor reload na renewal).
+# Gebruik OF een API-key (STALWART_TOKEN, aanbevolen) OF user/password:
 STALWART_URL=http://localhost:8080
+#STALWART_TOKEN=
 STALWART_USER=admin
 STALWART_PASSWORD=
 
@@ -137,7 +139,7 @@ STALWART_PASSWORD=
 #LEGO_SERVER=https://acme-v02.api.letsencrypt.org/directory
 EOF
         chmod 600 "${ENV_FILE}"
-        msg_warn "Vul ${ENV_FILE} in (MIJNHOST_API_KEY, LEGO_EMAIL, STALWART_PASSWORD)"
+        msg_warn "Vul ${ENV_FILE} in (MIJNHOST_API_KEY, LEGO_EMAIL + STALWART_TOKEN of STALWART_PASSWORD)"
     fi
 
     if [ ! -f "${DOMAINS_FILE}" ]; then
@@ -173,14 +175,20 @@ build_lego_args() {
 
 reload_stalwart() {
     msg_info "Stalwart TLS-certificaten herladen"
-    if [ -n "${STALWART_PASSWORD:-}" ]; then
-        # shellcheck disable=SC2086
+    if [ -n "${STALWART_TOKEN:-}" ]; then
+        # Aanbevolen: API-key (Bearer token)
+        "${CLI_BIN}" --url "${STALWART_URL}" \
+            --api-key "${STALWART_TOKEN}" \
+            create x:Action/ReloadTlsCertificates 2>&1 \
+            | tail -n2 || msg_warn "Reload mislukt - controleer STALWART_TOKEN in ${ENV_FILE}"
+    elif [ -n "${STALWART_PASSWORD:-}" ]; then
+        # Fallback: basic auth (user/password)
         "${CLI_BIN}" --url "${STALWART_URL}" --user "${STALWART_USER}" \
             --password "${STALWART_PASSWORD}" \
             create x:Action/ReloadTlsCertificates 2>&1 \
             | tail -n2 || msg_warn "Reload mislukt - controleer STALWART_* in ${ENV_FILE}"
     else
-        msg_warn "STALWART_PASSWORD niet gezet - reload overgeslagen"
+        msg_warn "STALWART_TOKEN of STALWART_PASSWORD niet gezet - reload overgeslagen"
     fi
 }
 
