@@ -177,7 +177,7 @@ start_service() {
 
 show_summary() {
     local ip
-    ip="$(hostname -i 2>/dev/null | awk '{print $1}')"
+    ip="$(detect_ip)"
     [ -z "$ip" ] && ip="<server-ip>"
 
     printf "\n"
@@ -190,6 +190,16 @@ show_summary() {
     printf "\n"
     printf "Manage the service with: rc-service stalwart {start|stop|restart|status}\n"
     printf "Edit settings in:        ${STALWART_DATA}/etc/stalwart.env (then restart)\n"
+}
+
+# Alpine busybox hostname -i/-I werken niet (geen reverse lookup, geen -I optie).
+# iproute2 (ip) zit standaard in basis-Alpine en is betrouwbaar.
+detect_ip() {
+    if command -v ip >/dev/null 2>&1; then
+        ip -4 addr show 2>/dev/null | awk '/inet / && $2 !~ /^127\./ {print $2}' | cut -d/ -f1 | head -n1
+    elif command -v hostname >/dev/null 2>&1; then
+        hostname -i 2>/dev/null | awk '{print $1}'
+    fi
 }
 
 # --- Update ----------------------------------------------------------------
