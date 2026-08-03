@@ -39,9 +39,10 @@ curl -fsSL https://raw.githubusercontent.com/FutureCow/stalwart-alpine/main/stal
 ## Na installatie
 
 - **Admin interface:** `http://<server-ip>:8080/admin`
-- **Bootstrap wachtwoord** (eerste keer):
+- **Bootstrap wachtwoord** (eerste keer, staat in stderr-log):
   ```sh
-  grep -A8 'bootstrap mode' /opt/stalwart_data/logs/stalwart.log
+  grep -A8 'bootstrap mode' /opt/stalwart_data/logs/stalwart.err
+  # fallback: /opt/stalwart_data/logs/stalwart.log
   ```
 - **Service beheren:**
   ```sh
