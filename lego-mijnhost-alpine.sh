@@ -197,17 +197,20 @@ do_issue() {
     build_lego_args
     msg_info "Certificaten aanvragen (DNS-01 via mijn.host)"
     # shellcheck disable=SC2086
-    "${LEGO_BIN}" ${LEGO_ARGS} --hook "sh ${0} reload"
+    "${LEGO_BIN}" ${LEGO_ARGS} --deploy-hook "sh ${0} reload"
     msg_ok "Certificaten opgehaald in ${LEGO_DIR}/certificates/"
     show_summary
 }
 
 do_renew() {
     load_env
+    build_lego_args
     msg_info "Renewals controleren"
+    # lego v5: 'run' doet zowel eerste aanvraag als renewals (geen apart 'renew'-commando meer).
+    # Domeinen zijn ook bij renewal verplicht.
     # shellcheck disable=SC2086
-    "${LEGO_BIN}" renew --path "${LEGO_DIR}" --days 30 \
-        --hook "sh ${0} reload" || true
+    "${LEGO_BIN}" ${LEGO_ARGS} --renew-days 30 \
+        --deploy-hook "sh ${0} reload" || true
     msg_ok "Renew gedaan (lego vernieuwt alleen als nodig)"
 }
 
